@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@nutanix-ui/prism-reactjs";
+import {
+  Button,
+  Title,
+  StackingLayout,
+  TextLabel,
+} from "@nutanix-ui/prism-reactjs";
+import reportsIcon from "../assets/reports.svg";
 
 function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,12 +70,6 @@ function Home() {
 
   return (
     <div className="app-container">
-      <header className="topbar">
-        <Link to="/" className="home-link">
-          <span className="title">SQL Server Fitment Check</span>
-        </Link>
-      </header>
-
       <nav className="tabs">
         <button className="tab active">Fitment Check</button>
         <Link className="tab" to="/summary">
@@ -77,39 +77,34 @@ function Home() {
         </Link>
       </nav>
 
-      <main
+      <StackingLayout
         className="content"
         id="mainContent"
         style={{ display: processing ? "none" : "flex" }}
       >
-        <h2>
-          Generate Fitment Report for your
-          <br />
-          Database Servers
-        </h2>
+        <Title data-test-id="size-h1">
+          Generate Fitment Report for your Database Servers
+        </Title>
         <p className="description">
           sample description text will be added here based on review with PM
         </p>
         <div className="icon-placeholder">
-          <img src="/clipboard.png" alt="Clipboard Icon" />
+          <img src={reportsIcon} alt="Clipboard Icon" />
         </div>
-        <h4>Insert VMs Details and get detailed reports</h4>
-        <p>
-          You can insert either in the form of CSV,
-          <br />
-          JSON format
-        </p>
+        <Title data-test-id="sub-text" size={Title.TitleSizes.H3}>
+          Insert VMs Details and get detailed reports
+        </Title>
+        <TextLabel type={"primary"}>
+          You can insert either in the form of CSV, JSON format
+        </TextLabel>
         <p className="prereq">
           Before getting started go through these prerequisites{" "}
           <a href="#">View Prerequisites</a>.
         </p>
-        <Button
-          type={Button.ButtonTypes.DESTRUCTIVE}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Create report
+        <Button onClick={() => setIsModalOpen(true)}>
+          Create a new report
         </Button>
-      </main>
+      </StackingLayout>
 
       {processing && (
         <div className="processing-screen">

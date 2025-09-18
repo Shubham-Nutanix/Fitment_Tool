@@ -29,11 +29,6 @@ function Instances() {
 
   return (
     <div>
-      <header className="topbar">
-        <Link to="/" className="home-link">
-          <span className="title">SQL Server Fitment Check</span>
-        </Link>
-      </header>
       <div className="top-nav">
         <Link to="/summary" className="top-tab">
           Summary
