@@ -12,6 +12,7 @@ import {
   Modal,
   FlexLayout,
   TextArea,
+  Table,
 } from "@nutanix-ui/prism-reactjs";
 import reportsIcon from "../assets/reports.svg";
 import "./home.css";
@@ -20,11 +21,10 @@ function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [vmInput, setVmInput] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [progressText, setProgressText] = useState("Checks started...");
-  const [progressPct, setProgressPct] = useState(0);
+  const [totalVMs, setTotalVMs] = useState(0);
+  const [processedVMs, setProcessedVMs] = useState(0);
 
   const navigate = useNavigate();
-
   const tabs = [{ title: "Report", key: "report" }];
 
   useEffect(() => {
@@ -37,17 +37,15 @@ function Home() {
             const json = await res.json();
             const total = json.total || 0;
             const processed = json.processed || 0;
-            const pct = total > 0 ? Math.floor((processed / total) * 100) : 0;
-            setProgressText(`${processed} / ${total} VMs complete`);
-            setProgressPct(pct);
+            setProcessedVMs(processed);
+
             if (processed >= total && total > 0) {
-              setProgressText("Report generated successfully!");
-              setProgressPct(100);
-              setTimeout(() => navigate("/summary"), 800);
               return;
             }
           }
-        } catch { }
+        } catch (e) {
+          console.error("Polling failed", e);
+        }
         timer = setTimeout(poll, 1000);
       };
       poll();
@@ -61,15 +59,20 @@ function Home() {
       alert("Please enter VM names");
       return;
     }
+
+    const vmList = value.split(',')
+      .map(name => name.trim())
+      .filter(Boolean);
+
+    setTotalVMs(vmList.length);
     setIsModalOpen(false);
     setProcessing(true);
-    setProgressText("0%");
-    setProgressPct(0);
+    setProcessedVMs(0);
     try {
       const resp = await fetch("/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostnames: value }),
+        body: JSON.stringify({ hostnames: vmList.join(',') }),
       });
       if (!resp.ok) throw new Error("Failed to start");
     } catch (e) {
@@ -77,6 +80,27 @@ function Home() {
       setProcessing(false);
     }
   };
+
+  const progressTableData = [
+    {
+      key: "progress",
+      totalVMs: totalVMs,
+      status: processedVMs >= totalVMs ? `Generated on ${new Date().toLocaleString()}` : `Generating (${processedVMs} / ${totalVMs} VMs complete)...`,
+    }
+  ];
+
+  const columns = [
+    {
+      title: "Total VMs",
+      dataIndex: "totalVMs",
+      key: "totalVMs",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+    }
+  ]
 
   return (
     <>
@@ -97,59 +121,77 @@ function Home() {
           id="without-underline-pattern"
         />
       </Separator>
-      <div className="app-container home-page">
-        <div className="home-page-content">
-          <StackingLayout
-            className="content"
-            id="mainContent"
-            style={{ display: processing ? "none" : "flex" }}
-          >
-            <Title data-test-id="size-h1">
-              Generate Fitment Report for your Database Servers
-            </Title>
-            <TextLabel type={"primary"}>
-              sample description text will be added here based on review with PM
-            </TextLabel>
-            <StackingLayout className="content-stacking" itemGap="L">
-              <div className="icon-placeholder">
-                <img src={reportsIcon} alt="Clipboard Icon" />
-              </div>
-              <Title data-test-id="sub-text" size={Title.TitleSizes.H3}>
-                Insert VMs Details and get detailed reports
-              </Title>
-              <TextLabel type={"primary"} multiLine={true}>
-                You can insert either in the form of CSV, JSON format
-              </TextLabel>
-            </StackingLayout>
-            <TextLabel type={"primary"} multiLine={true}>
-              Before getting started go through these prerequisites{" "}
-              <Link href="#">View Prerequisites</Link>
-            </TextLabel>
-            <Button onClick={() => setIsModalOpen(true)}>
-              Create a new report
-            </Button>
-          </StackingLayout>
 
+      <FlexLayout className="app-container home-page">
+        <FlexLayout className="home-page-content">
+          {/* Regular content - hidden during processing */}
+          {!processing && (
+            <StackingLayout
+              className="content"
+              id="mainContent"
+              style={{ display: processing ? "none" : "flex" }}
+            >
+              <Title data-test-id="size-h1">
+                Generate Fitment Report for your Database Servers
+              </Title>
+              <TextLabel type={"primary"}>
+                sample description text will be added here based on review with PM
+              </TextLabel>
+              <FlexLayout>
+                <img src={reportsIcon} alt="Clipboard Icon" />
+              </FlexLayout>
+              <StackingLayout className="content-stacking" itemGap="L">
+                <Title data-test-id="sub-text" size={Title.TitleSizes.H3}>
+                  Insert VMs Details and get detailed reports
+                </Title>
+                <TextLabel type={"primary"} multiLine={true}>
+                  You can insert either in the form of CSV, JSON format
+                </TextLabel>
+              </StackingLayout>
+              <TextLabel type={"primary"} multiLine={true}>
+                Before getting started go through these prerequisites, {" "}
+                <Link href="#">View Prerequisites</Link>
+              </TextLabel>
+              <Button onClick={() => setIsModalOpen(true)}>
+                Create a new report
+              </Button>
+            </StackingLayout>
+          )}
+
+          {/* Processing content - shown during processing */}
           {processing && (
-            <div className="processing-screen">
-              <div className="processing-content">
-                <div className="spinner"></div>
-                <h2>Processing Your Request</h2>
-                <p>
-                  Please wait while we execute checks on your database
-                  servers...
-                </p>
-                <div className="progress-info">
-                  <p>{progressText}</p>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${progressPct}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FlexLayout className="processing-container">
+              <FlexLayout className="processing-content">
+                <StackingLayout
+                  className="content"
+                  id="mainContent"
+                >
+                  <Title data-test-id="size-h1">
+                    Generate Fitment Report for your Database Servers
+                  </Title>
+                  <TextLabel type={"primary"} multiLine={true}>
+                    Before getting started go through these prerequisites, {" "}
+                    <Link href="#">View Prerequisites</Link>
+                  </TextLabel>
+                  <Table
+                    size="small"
+                    bordered={true}
+                    className="full-width ndb-table"
+                    dataSource={progressTableData}
+                    columns={columns}
+                    rowKey="key"
+                    pagination={false}
+                    loading={false}
+                  />
+                  <Button
+                    disabled={processedVMs < totalVMs}
+                    onClick={() => navigate("/summary")}
+                  >
+                    View Detailed Report
+                  </Button>
+                </StackingLayout>
+              </FlexLayout>
+            </FlexLayout>
           )}
 
           <Modal
@@ -198,8 +240,8 @@ function Home() {
               </FlexLayout>
             </FlexLayout>
           </Modal>
-        </div>
-      </div>
+        </FlexLayout>
+      </FlexLayout>
     </>
   );
 }

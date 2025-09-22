@@ -22,3 +22,12 @@
 .content-stacking {
   width: 250px;
 }
+
+.processing-container {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+  flex-direction: column;
+}
