@@ -9,6 +9,9 @@ import {
   VerticalSeparator,
   Tabs,
   Link,
+  Modal,
+  FlexLayout,
+  TextArea,
 } from "@nutanix-ui/prism-reactjs";
 import reportsIcon from "../assets/reports.svg";
 import "./home.css";
@@ -44,7 +47,7 @@ function Home() {
               return;
             }
           }
-        } catch {}
+        } catch { }
         timer = setTimeout(poll, 1000);
       };
       poll();
@@ -149,53 +152,52 @@ function Home() {
             </div>
           )}
 
-          {isModalOpen && (
-            <div
-              className="modal-overlay"
-              onClick={() => setIsModalOpen(false)}
+          <Modal
+            visible={isModalOpen}
+            title={<Title size="h3">Generate Fitment Report</Title>}
+            width={600}
+            onClose={() => setIsModalOpen(false)}
+            restoreFocus={true}
+            closeOnEscape={true}
+            footer={[
+              <Button
+                type={Button.ButtonTypes.SECONDARY}
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>,
+              <Button
+                type={Button.ButtonTypes.PRIMARY}
+                onClick={startGeneration}
+              >
+                Generate Now
+              </Button>
+            ]}
+          >
+            <FlexLayout
+              padding="20px"
+              itemGap="L"
+              className="full-width"
+              flexDirection="column"
             >
-              <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-                <header className="modal-header">
-                  <h3>Generate Fitment Report</h3>
-                  <div className="modal-actions">
-                    <span className="help">?</span>
-                    <span
-                      className="close-modal"
-                      onClick={() => setIsModalOpen(false)}
-                    >
-                      ✕
-                    </span>
-                  </div>
-                </header>
-                <div className="modal-body">
-                  <p>
-                    Add list of VMs for which you want to generate the fitment
-                    report. You can choose to manually add the details.
-                  </p>
-                  <div className="form-row">
-                    <label htmlFor="vmInput">VMs</label>
-                    <textarea
-                      id="vmInput"
-                      placeholder="Enter VM names separated by commas (e.g., VM1, VM2, VM3)"
-                      value={vmInput}
-                      onChange={(e) => setVmInput(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <footer className="modal-footer">
-                  <button
-                    className="modal-cancel"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button className="modal-generate" onClick={startGeneration}>
-                    Generate Now
-                  </button>
-                </footer>
-              </div>
-            </div>
-          )}
+              <TextLabel type="primary" multiLine={true}>
+                Add list of VMs for which you want to generate the fitment
+                report. You can choose to manually add the details.
+              </TextLabel>
+
+              <FlexLayout flexDirection="column" itemGap="S">
+                <TextLabel type="primary">VMs</TextLabel>
+                <TextArea
+                  id="vmInput"
+                  placeholder="Enter VM names separated by commas (e.g., VM1, VM2, VM3)"
+                  value={vmInput}
+                  onChange={(e) => setVmInput(e.target.value)}
+                  rows={18}
+                  style={{ width: "100%" }}
+                />
+              </FlexLayout>
+            </FlexLayout>
+          </Modal>
         </div>
       </div>
     </>
