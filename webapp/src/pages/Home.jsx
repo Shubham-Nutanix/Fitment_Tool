@@ -9,6 +9,8 @@ import {
   VerticalSeparator,
   Tabs,
   Link,
+  Loader,
+  StatusIcon,
   Modal,
   FlexLayout,
   TextArea,
@@ -85,7 +87,17 @@ function Home() {
     {
       key: "progress",
       totalVMs: totalVMs,
-      status: processedVMs >= totalVMs ? `Generated on ${new Date().toLocaleString()}` : `Generating (${processedVMs} / ${totalVMs} VMs complete)...`,
+      status: processedVMs >= totalVMs ?
+        <FlexLayout alignItems="center" itemGap="S">
+          <StatusIcon
+            type={StatusIcon.StatusIconTypes.VALID}
+          />
+          <span>Generated on {new Date().toLocaleString()}</span>
+        </FlexLayout> :
+        <FlexLayout alignItems="center" itemGap="S">
+          <Loader data-test-id="default" size="small" />
+          <span>Generating ({processedVMs} / {totalVMs} VMs complete)...</span>
+        </FlexLayout>,
     }
   ];
 
