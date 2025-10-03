@@ -19,7 +19,7 @@ export default (env, argv) => {
       publicPath: "/",
     },
     resolve: {
-      extensions: [".js", ".jsx"],
+      extensions: [".js", ".jsx", ".less", ".css"],
     },
     module: {
       rules: [
@@ -41,7 +41,26 @@ export default (env, argv) => {
           use: ["style-loader", "css-loader"],
         },
         {
+          test: /\.less$/,
+          use: [
+            "style-loader",
+            "css-loader",
+            {
+              loader: "less-loader",
+              options: {
+                lessOptions: {
+                  javascriptEnabled: true,
+                },
+              },
+            },
+          ],
+        },
+        {
           test: /\.(png|jpe?g|gif|svg)$/i,
+          type: "asset/resource",
+        },
+        {
+          test: /\.(woff|woff2|eot|ttf|otf)$/i,
           type: "asset/resource",
         },
       ],

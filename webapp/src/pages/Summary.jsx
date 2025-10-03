@@ -1,8 +1,39 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  Title,
+  StackingLayout,
+  TextLabel,
+  Separator,
+  BackIcon,
+  VerticalSeparator,
+  Tabs,
+  DashboardWidgetHeader,
+  FlexLayout,
+  DashboardWidgetLayout,
+  WidgetTable,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Button,
+} from "@nutanix-ui/prism-reactjs";
+
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "@nutanix-ui/recharts";
+
+import "./summary.css";
 
 function Summary() {
   const [data, setData] = useState(null);
+  const [activeTab, setActiveTab] = useState("Database Server");
+  const [expandedRows, setExpandedRows] = useState([]);
+
+  const navigate = useNavigate();
+  const [activeTabKey, setActiveTabKey] = useState("summary");
 
   useEffect(() => {
     const load = async () => {
@@ -18,216 +49,307 @@ function Summary() {
     load();
   }, []);
 
-  const [activeTab, setActiveTab] = useState("Database Server");
+  const tabs = [
+    { title: "Summary", key: "summary", route: "/summary" },
+    { title: "Database Servers", key: "Dbservers", route: "/dbservers" },
+    { title: "Instances", key: "Instances", route: "/instances" },
+    { title: "Databases", key: "Databases", route: "/databases" },
+  ];
 
+  const entity = data?.summary?.entity_wise || {};
   const checkWise = data?.summary?.check_wise || [];
-  const entity = data?.summary?.entity_wise;
+
+  const entityBlocks = [
+    {
+      label: "Servers",
+      total: entity.total_vms || 0,
+      failed: entity.failed_vms || 0,
+      title: "Check Status by Database Servers",
+    },
+    {
+      label: "Instances",
+      total: entity.total_instances || 0,
+      failed: entity.failed_instances || 0,
+      title: "Check Status by Instances",
+    },
+    {
+      label: "Databases",
+      total: entity.total_databases || 0,
+      failed: entity.failed_databases || 0,
+      title: "Check Status by Databases",
+    },
+  ];
+
+  const checkWiseTableData = (
+    checkWise.find((x) => x.type === activeTab)?.categories || []
+  ).map((cat) => ({
+    key: cat.category_name,
+    checks: cat.category_name,
+    passed: cat.passed,
+    failed: cat.failed,
+    _children: (cat.check || []).map((ch) => ({
+      key: `${cat.category_name}-${ch.check_name}`,
+      checks: ch.check_name,
+      passed: ch.passed,
+      failed: ch.failed,
+    })),
+  }));
+
+  const handleExpand = (expanded, rowData) => {
+    setExpandedRows((prev) =>
+      expanded
+        ? [...prev, rowData.key]
+        : prev.filter((k) => k !== rowData.key)
+    );
+  };
 
   return (
-    <div>
-      <div className="top-nav">
-        <Link to="/summary" className="top-tab active">
-          Summary
-        </Link>
-        <Link to="/dbservers" className="top-tab">
-          Database Servers
-        </Link>
-        <Link to="/instances" className="top-tab">
-          Instances
-        </Link>
-        <Link to="/databases" className="top-tab">
-          Databases
-        </Link>
-      </div>
+    <>
+      {/* Header */}
+      <Separator
+        className="tab-class-home"
+        separator={<VerticalSeparator size="large" />}
+        spacing="spacing-20px"
+      >
+        <BackIcon onClick={() => navigate("/")} />
+        <Title data-test-id="size-h2" size="h2">
+          Fitment Report
+        </Title>
+        <Tabs
+          data={tabs}
+          activeKey={activeTabKey}
+          onTabClick={(key) => {
+            setActiveTabKey(key);
+            const tab = tabs.find((t) => t.key === key);
+            if (tab) navigate(tab.route);
+          }}
+          panelIdPrefix={new Date().getTime()}
+          padding="0px"
+          underline={false}
+          id="without-underline-pattern"
+        />
+      </Separator>
 
-      <div className="container">
-        <div className="card">
-          <h2>Entities Wise Summary</h2>
-          <div className="summary-block">
-            <div>
-              <div className="summary-count" id="server-count">
-                {entity?.total_vms ?? "-"}
-              </div>
-              <div className="summary-text">Total DBServers Checked</div>
-            </div>
-            <div className="summary-details">
-              <h3>Check Status by Database Servers</h3>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill failed"
-                  style={{
-                    width: `${
-                      entity
-                        ? (entity.failed_vms / (entity.total_vms || 1)) * 100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-                <div
-                  className="progress-fill passed"
-                  style={{
-                    width: `${
-                      entity
-                        ? 100 -
-                          (entity.failed_vms / (entity.total_vms || 1)) * 100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <p>
-                <span className="failed">{entity?.failed_vms ?? "-"}</span> /{" "}
-                <span>{entity?.total_vms ?? "-"}</span> Failed
-              </p>
-            </div>
-          </div>
-
-          <div className="summary-block">
-            <div>
-              <div className="summary-count" id="instance-count">
-                {entity?.total_instances ?? "-"}
-              </div>
-              <div className="summary-text">Total Instances Checked</div>
-            </div>
-            <div className="summary-details">
-              <h3>Check Status by Instances</h3>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill failed"
-                  style={{
-                    width: `${
-                      entity
-                        ? (entity.failed_instances /
-                            (entity.total_instances || 1)) *
-                          100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-                <div
-                  className="progress-fill passed"
-                  style={{
-                    width: `${
-                      entity
-                        ? 100 -
-                          (entity.failed_instances /
-                            (entity.total_instances || 1)) *
-                            100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <p>
-                <span className="failed">
-                  {entity?.failed_instances ?? "-"}
-                </span>{" "}
-                / <span>{entity?.total_instances ?? "-"}</span> Failed
-              </p>
-            </div>
-          </div>
-
-          <div className="summary-block">
-            <div>
-              <div className="summary-count" id="database-count">
-                {entity?.total_databases ?? "-"}
-              </div>
-              <div className="summary-text">Total Databases Checked</div>
-            </div>
-            <div className="summary-details">
-              <h3>Check Status by Databases</h3>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill failed"
-                  style={{
-                    width: `${
-                      entity
-                        ? (entity.failed_databases /
-                            (entity.total_databases || 1)) *
-                          100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-                <div
-                  className="progress-fill passed"
-                  style={{
-                    width: `${
-                      entity
-                        ? 100 -
-                          (entity.failed_databases /
-                            (entity.total_databases || 1)) *
-                            100
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <p>
-                <span className="failed">
-                  {entity?.failed_databases ?? "-"}
-                </span>{" "}
-                / <span>{entity?.total_databases ?? "-"}</span> Failed
-              </p>
-            </div>
-          </div>
-
-          <div className="legend">
-            <span className="failed">✘ Failed</span>
-            <span className="passed">✔ Passed</span>
-          </div>
-        </div>
-
-        <div className="card">
-          <h2>Check Wise Summary</h2>
-          <div className="tabs">
-            {["Database Server", "Instance", "Database"].map((t) => (
-              <button
-                key={t}
-                className={`tab ${activeTab === t ? "active" : ""}`}
-                onClick={() => setActiveTab(t)}
-              >
-                {t} Checks
-              </button>
-            ))}
-          </div>
-          <table className="summary-table">
-            <thead>
-              <tr>
-                <th>Checks</th>
-                <th>Passed</th>
-                <th>Failed</th>
-              </tr>
-            </thead>
-            <tbody id="checks-table-body">
-              {(
-                checkWise.find((x) => x.type === activeTab)?.categories || []
-              ).flatMap((cat) => [
-                <tr key={cat.category_name} className="category-row">
-                  <td style={{ cursor: "pointer" }}>{cat.category_name}</td>
-                  <td className="passed">✔ {cat.passed}</td>
-                  <td className="failed">✘ {cat.failed}</td>
-                  <td className="toggle-cell">
-                    <span className="toggle">▼</span>
-                  </td>
-                </tr>,
-                ...cat.check.map((ch) => (
-                  <tr
-                    key={`${cat.category_name}-${ch.check_name}`}
-                    className="check-row"
+      <FlexLayout className="summary-layout" padding="20px" itemGap="L">
+        {/* Entities Wise Summary with Recharts */}
+        <StackingLayout className="summary-half">
+          <DashboardWidgetLayout
+            className="summary-card"
+            header={
+              <DashboardWidgetHeader
+                title="Entities Wise Summary"
+                showCloseIcon={false}
+              />
+            }
+            bodyContent={
+              <StackingLayout itemGap="XL">
+                {entityBlocks.map((block) => (
+                  <FlexLayout
+                    alignItems="flex-start"
+                    itemGap="XL"
+                    key={block.label}
+                    className="entity-block"
                   >
-                    <td style={{ paddingLeft: 20 }}>{ch.check_name}</td>
-                    <td className="passed">✔ {ch.passed}</td>
-                    <td className="failed">✘ {ch.failed}</td>
-                    <td></td>
-                  </tr>
-                )),
-              ])}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                    <StackingLayout
+                      alignItems="center"
+                      className="entity-count-container"
+                    >
+                      <Title size="h1" className="entity-total-count">
+                        {block.total}
+                      </Title>
+                      <TextLabel type="secondary">
+                        Total {block.label} Checked
+                      </TextLabel>
+                    </StackingLayout>
+
+                    <StackingLayout itemGap="S">
+                      <Title size="h5">{block.title}</Title>
+
+                      <div className="chart-container">
+                        <ResponsiveContainer>
+                          <BarChart
+                            data={[
+                              {
+                                name: block.label,
+                                failed: block.failed,
+                                passed: block.total - block.failed,
+                              },
+                            ]}
+                            layout="vertical"
+                            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                            compact
+                          >
+                            <XAxis
+                              type="number"
+                              domain={[0, block.total || 1]}
+                              hide
+                            />
+                            <YAxis type="category" dataKey="name" hide />
+
+                            <Bar
+                              dataKey="failed"
+                              stackId="a"
+                              fill="#E4677C"
+                              barSize={20}
+                              isAnimationActive={false}
+                            />
+                            <Bar
+                              dataKey="passed"
+                              stackId="a"
+                              fill="#93D1B2"
+                              barSize={20}
+                              isAnimationActive={false}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <TextLabel type="secondary">
+                        <span className="failed-count">{block.failed}</span>{" "}
+                        / <span>{block.total}</span> Failed
+                      </TextLabel>
+                    </StackingLayout>
+                  </FlexLayout>
+                ))}
+
+                <FlexLayout
+                  justifyContent="center"
+                  itemGap="XL"
+                  className="legend-container"
+                >
+                  <TextLabel type="secondary">
+                    <span className="legend-failed">▲ Failed</span>
+                  </TextLabel>
+                  <TextLabel type="secondary">
+                    <span className="legend-passed">✔ Passed</span>
+                  </TextLabel>
+                </FlexLayout>
+              </StackingLayout>
+            }
+          />
+        </StackingLayout>
+
+        <StackingLayout className="summary-half">
+          <DashboardWidgetLayout
+            className="summary-card"
+            header={
+              <DashboardWidgetHeader
+                title="Check Wise Summary"
+                showCloseIcon={false}
+              />
+            }
+            bodyContent={
+              <StackingLayout itemGap="0px">
+                <Tabs
+                  data={[
+                    { title: "Database Server Checks", key: "Database Server" },
+                    { title: "Instance Checks", key: "Instance" },
+                    { title: "Database Checks", key: "Database" },
+                  ]}
+                  onTabClick={(tabKey) => setActiveTab(tabKey)}
+                  defaultActiveKey={"Database Server"}
+                  activeKey={activeTab}
+                  panelIdPrefix="checkwise-tabs"
+                  id="checkwise-summary"
+                />
+
+                <FlexLayout padding="0px 20px">
+                  <StackingLayout itemGap="0px">
+                    <WidgetTable
+                      rowKey="key"
+                      dataSource={checkWiseTableData}
+                      columns={[
+                        { title: "Checks", key: "checks", dataIndex: "checks" },
+                        {
+                          title: "Passed",
+                          key: "passed",
+                          dataIndex: "passed",
+                          render: (val) => (
+                            <span className="table-passed">✔ {val}</span>
+                          ),
+                        },
+                        {
+                          title: "Failed",
+                          key: "failed",
+                          dataIndex: "failed",
+                          render: (val) => (
+                            <span className="table-failed">✘ {val}</span>
+                          ),
+                        },
+                        {
+                          title: "",
+                          key: "action",
+                          render: (_, rowData) => {
+                            const isExpanded = expandedRows.includes(rowData.key);
+                            return (
+                              <Button
+                                appearance="mini"
+                                aria-label="Expand/Collapse"
+                                onClick={() =>
+                                  handleExpand(!isExpanded, rowData)
+                                }
+                              >
+                                {isExpanded ? (
+                                  <ChevronUpIcon aria-hidden="true" />
+                                ) : (
+                                  <ChevronDownIcon aria-hidden="true" />
+                                )}
+                              </Button>
+                            );
+                          },
+                        },
+                      ]}
+                      background="base"
+                      structure={{
+                        columnWidths: {
+                          checks: "64%",
+                          passed: "15%",
+                          failed: "15%",
+                          action: "6%",
+                        },
+                        showHeader: true,
+                      }}
+                    />
+
+                    {checkWiseTableData.map((rowData, index) => {
+                      const isExpanded = expandedRows.includes(rowData.key);
+                      if (!isExpanded) return null;
+
+                      return (
+                        <div
+                          key={`expanded-${rowData.key}`}
+                          className="expanded-row"
+                        >
+                          {rowData._children.map((child) => (
+                            <FlexLayout
+                              key={child.key}
+                              alignItems="center"
+                              className="expanded-row-item"
+                            >
+                              <span className="expanded-check-name">
+                                {child.checks}
+                              </span>
+
+                              <span className="expanded-passed">
+                                ✔ {child.passed}
+                              </span>
+                              <span className="expanded-failed">
+                                ✘ {child.failed}
+                              </span>
+                              <span className="expanded-spacer"></span>
+                            </FlexLayout>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </StackingLayout>
+                </FlexLayout>
+              </StackingLayout>
+            }
+          />
+        </StackingLayout>
+      </FlexLayout>
+    </>
   );
 }
 
