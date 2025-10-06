@@ -24,7 +24,6 @@ import {
   XAxis,
   YAxis,
 } from "@nutanix-ui/recharts";
-
 import "./summary.css";
 
 function Summary() {
@@ -130,9 +129,8 @@ function Summary() {
         />
       </Separator>
 
-      <FlexLayout className="summary-layout" padding="20px" itemGap="L">
-        {/* Entities Wise Summary with Recharts */}
-        <StackingLayout className="summary-half">
+      <FlexLayout className="summary-layout" padding="20px">
+        {/* Entities Wise Summary*/}
           <DashboardWidgetLayout
             className="summary-card"
             header={
@@ -142,31 +140,28 @@ function Summary() {
               />
             }
             bodyContent={
-              <StackingLayout itemGap="XL">
+              <StackingLayout>
                 {entityBlocks.map((block) => (
                   <FlexLayout
-                    alignItems="flex-start"
-                    itemGap="XL"
                     key={block.label}
                     className="entity-block"
                   >
                     <StackingLayout
-                      alignItems="center"
                       className="entity-count-container"
                     >
                       <Title size="h1" className="entity-total-count">
                         {block.total}
                       </Title>
-                      <TextLabel type="secondary">
-                        Total {block.label} Checked
-                      </TextLabel>
+                      <TextLabel type="secondary">Total</TextLabel>
+                      <TextLabel type="secondary">{block.label}</TextLabel>
+                      <TextLabel type="secondary">Checked</TextLabel>
                     </StackingLayout>
 
-                    <StackingLayout itemGap="S">
+                    <div className="chart-section">
                       <Title size="h5">{block.title}</Title>
 
                       <div className="chart-container">
-                        <ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height={80}>
                           <BarChart
                             data={[
                               {
@@ -208,7 +203,7 @@ function Summary() {
                         <span className="failed-count">{block.failed}</span>{" "}
                         / <span>{block.total}</span> Failed
                       </TextLabel>
-                    </StackingLayout>
+                    </div>
                   </FlexLayout>
                 ))}
 
@@ -227,9 +222,7 @@ function Summary() {
               </StackingLayout>
             }
           />
-        </StackingLayout>
 
-        <StackingLayout className="summary-half">
           <DashboardWidgetLayout
             className="summary-card"
             header={
@@ -347,7 +340,6 @@ function Summary() {
               </StackingLayout>
             }
           />
-        </StackingLayout>
       </FlexLayout>
     </>
   );

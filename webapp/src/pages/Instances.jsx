@@ -1,9 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  Title,
+  Separator,
+  BackIcon,
+  VerticalSeparator,
+  Tabs,
+} from "@nutanix-ui/prism-reactjs";
 
 function Instances() {
   const [instances, setInstances] = useState([]);
   const [filter, setFilter] = useState("all");
+  const [activeTabKey, setActiveTabKey] = useState("Instances");
+
+  const navigate = useNavigate();
+  const tabs = [
+    { title: "Summary", key: "summary", route: "/summary" },
+    { title: "Database Servers", key: "Dbservers", route: "/dbservers" },
+    { title: "Instances", key: "Instances", route: "/instances" },
+    { title: "Databases", key: "Databases", route: "/databases" },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -29,20 +45,29 @@ function Instances() {
 
   return (
     <div>
-      <div className="top-nav">
-        <Link to="/summary" className="top-tab">
-          Summary
-        </Link>
-        <Link to="/dbservers" className="top-tab">
-          Database Servers
-        </Link>
-        <Link to="/instances" className="top-tab active">
-          Instances
-        </Link>
-        <Link to="/databases" className="top-tab">
-          Databases
-        </Link>
-      </div>
+      <Separator
+        className="tab-class-home"
+        separator={<VerticalSeparator size="large" />}
+        spacing="spacing-20px"
+      >
+        <BackIcon onClick={() => navigate("/")} />
+        <Title data-test-id="size-h2" size="h2">
+          Fitment Report
+        </Title>
+        <Tabs
+          data={tabs}
+          activeKey={activeTabKey}
+          onTabClick={(key) => {
+            setActiveTabKey(key);
+            const tab = tabs.find((t) => t.key === key);
+            if (tab) navigate(tab.route);
+          }}
+          panelIdPrefix={new Date().getTime()}
+          padding="0px"
+          underline={true}
+          id="without-underline-pattern"
+        />
+      </Separator>
 
       <div className="container">
         <div className="filter-section">
