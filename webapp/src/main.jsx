@@ -5,6 +5,7 @@ import "./index.css";
 import Home from "./pages/Home.jsx";
 import Summary from "./pages/Summary.jsx";
 import DBServers from "./pages/DBServers.jsx";
+import DBServersEbr from "./pages/DBServersEbr.jsx";
 import Instances from "./pages/Instances.jsx";
 import Databases from "./pages/Databases.jsx";
 import Layout from "./components/Layout.jsx";
@@ -17,7 +18,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "summary", element: <Summary /> },
-      { path: "dbservers", element: <DBServers /> },
+      // { path: "dbservers", element: <DBServers /> },
+      { path: "dbservers", element: <DBServersEbr /> },
       { path: "instances", element: <Instances /> },
       { path: "databases", element: <Databases /> },
     ],
@@ -25,7 +27,5 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>
+  <RouterProvider router={router} />
 );
